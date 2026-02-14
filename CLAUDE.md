@@ -14,35 +14,56 @@ Nginx reverse proxy to `127.0.0.1:8080`.
 - **Language:** Go 1.23+
 - **Framework:** Standard library `net/http` with method-based routing (Go 1.22+ patterns)
 - **Configuration:** Environment variables (12-factor app style)
+- **Monitoring:** Sentry (developer subscription) — optional, enabled via SENTRY_DSN
 - **Deployment:** Docker container behind host Nginx reverse proxy
 - **Databases:** External PaaS services (Neon/Supabase for Postgres, MongoDB Atlas, etc.)
+
+## Dependencies
+
+- `github.com/getsentry/sentry-go` (v0.40.0) — error tracking and performance tracing
+- `github.com/getsentry/sentry-go/http` — net/http middleware integration
+
+No other external dependencies. Everything else uses Go's standard library.
 
 ## Project Structure
 
 ```
 docker-api-demo/
-├── cmd/server/          # Application entry point
+├── cmd/server/main.go       # Entry point — wires config, Sentry, middleware, server
 ├── internal/
-│   ├── config/          # Environment-based configuration
-│   ├── handler/         # HTTP request handlers
-│   ├── middleware/       # HTTP middleware (logging, Sentry)
-│   ├── monitoring/      # Sentry SDK initialization
-│   └── server/          # HTTP server setup and lifecycle
-├── Dockerfile           # Multi-stage production build
-├── docker-compose.yml   # Local development setup
-└── .env                 # Local env vars (not committed)
+│   ├── config/config.go     # Environment-based configuration with validation
+│   ├── handler/
+│   │   ├── routes.go        # Route registration
+│   │   ├── health.go        # GET /health — status + Sentry check + optional test event
+│   │   ├── hello.go         # GET /api/hello — demo greeting endpoint
+│   │   ├── response.go      # JSON response helpers (writeJSON, writeError)
+│   │   └── handler_test.go  # Unit tests for health and hello handlers
+│   ├── middleware/
+│   │   ├── logging.go       # Request logging (method, path, status, duration)
+│   │   └── sentry.go        # Sentry panic recovery and performance tracing
+│   ├── monitoring/
+│   │   └── sentry.go        # Sentry SDK initialization and cleanup
+│   └── server/
+│       └── server.go        # HTTP server creation and graceful shutdown
+├── Dockerfile               # Multi-stage: golang:1.23-alpine → alpine:3.21
+├── docker-compose.yml       # Local dev + production (binds 127.0.0.1:8080)
+├── .dockerignore
+├── .env                     # Local env vars (not committed)
+├── go.mod
+└── go.sum
 ```
 
 ## Conventions
 
 - Files should not exceed ~100 lines of code
 - Production-grade error handling (no silent failures)
-- Graceful shutdown on SIGINT/SIGTERM
+- Graceful shutdown on SIGINT/SIGTERM with 10-second drain timeout
 - Configuration via environment variables, never hardcoded
 - Dates and times in ISO 8601 / RFC 3339 format
 - Structured log output with timestamps
 - Container ports bind to 127.0.0.1 (Docker bypasses UFW on 0.0.0.0)
 - Use `docker compose` (v2, space not hyphen)
+- Sentry is optional — runs fine without SENTRY_DSN set
 
 ## Build & Run
 
@@ -52,11 +73,15 @@ docker-api-demo/
 go run ./cmd/server
 ```
 
+Note: Go does not read `.env` files. Export variables manually or use Docker Compose.
+
 ### Docker
 
 ```bash
 docker compose up --build
 ```
+
+Docker Compose reads `.env` automatically and passes variables to the container.
 
 ### Test
 
@@ -77,8 +102,28 @@ go test ./...
 
 ## API Endpoints
 
-| Method | Path              | Description                              |
-|--------|-------------------|------------------------------------------|
-| GET    | /health           | Health check + Sentry status             |
+| Method | Path                  | Description                           |
+|--------|-----------------------|---------------------------------------|
+| GET    | /health               | Health check + Sentry status          |
 | GET    | /health?sentry_test=1 | Health check + send Sentry test event |
-| GET    | /api/hello        | Demo greeting endpoint                   |
+| GET    | /api/hello            | Demo greeting (accepts ?name=)        |
+
+## Middleware Chain
+
+Requests pass through: Sentry (panic recovery + tracing) → Request Logger → Handler
+
+## Related Repositories
+
+- **backend01** — Server infrastructure: Nginx configs, SSL snippets, deployment
+  runbooks, static sites. The `api.ruohomaki.fi` Nginx config lives there.
+
+## Current Status
+
+- [x] Go API with clean architecture
+- [x] Docker multi-stage build (non-root, ~15 MB image)
+- [x] Sentry error tracking and performance tracing
+- [x] Health endpoint with Sentry status
+- [x] Graceful shutdown
+- [x] Unit tests for handlers
+- [ ] GitHub Actions CI pipeline (Phase 2)
+- [ ] Automated deployment to server (Phase 3)
