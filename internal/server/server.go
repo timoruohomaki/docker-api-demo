@@ -35,7 +35,7 @@ func Run(ctx context.Context, srv *http.Server) error {
 	errCh := make(chan error, 1)
 
 	go func() {
-		log.Printf("server listening on %s", srv.Addr)
+		log.Printf("server is listening on %s", srv.Addr)
 		if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			errCh <- fmt.Errorf("listen error: %w", err)
 		}

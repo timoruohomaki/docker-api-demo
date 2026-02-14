@@ -146,4 +146,4 @@ Requests pass through: Sentry (panic recovery + tracing) → Request Logger → 
 - [x] Unit tests for handlers
 - [x] GitHub Actions CI pipeline (tests + build on push/PR)
 - [x] GitHub Actions CD pipeline (image push to ghcr.io + SSH deploy)
-- [ ] Server-side setup: SSH deploy key, GitHub Secrets, production compose
+- [x] Server-side setup: SSH deploy key, GitHub Secrets, production compose
