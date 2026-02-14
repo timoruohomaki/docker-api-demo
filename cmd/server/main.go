@@ -10,6 +10,7 @@ import (
 	"github.com/timoruohomaki/docker-api-demo/internal/config"
 	"github.com/timoruohomaki/docker-api-demo/internal/handler"
 	"github.com/timoruohomaki/docker-api-demo/internal/middleware"
+	"github.com/timoruohomaki/docker-api-demo/internal/monitoring"
 	"github.com/timoruohomaki/docker-api-demo/internal/server"
 )
 
@@ -19,12 +20,19 @@ func main() {
 		log.Fatalf("failed to load configuration: %v", err)
 	}
 
+	sentryCleanup, err := monitoring.InitSentry(cfg)
+	if err != nil {
+		log.Fatalf("failed to initialize sentry: %v", err)
+	}
+	defer sentryCleanup()
+
 	mux := handler.NewRouter()
-	wrapped := middleware.RequestLogger(mux)
+
+	// Middleware chain: Sentry (outer) → Logger → Handler
+	wrapped := middleware.SentryHandler(middleware.RequestLogger(mux))
 
 	srv := server.New(cfg, wrapped)
 
-	// Listen for shutdown signals
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 

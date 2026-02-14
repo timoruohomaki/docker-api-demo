@@ -29,6 +29,10 @@ func TestHandleHealth(t *testing.T) {
 	if resp.Timestamp == "" {
 		t.Error("expected non-empty timestamp")
 	}
+
+	if resp.Sentry != "disabled" {
+		t.Errorf("expected sentry 'disabled' without SDK init, got %q", resp.Sentry)
+	}
 }
 
 func TestHandleHello(t *testing.T) {

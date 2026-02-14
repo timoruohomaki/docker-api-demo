@@ -7,4 +7,7 @@ services:
       - PORT=8080
       - HOST=0.0.0.0
       - LOG_LEVEL=info
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-development}
+      - APP_VERSION=${APP_VERSION:-0.1.0}
     restart: unless-stopped

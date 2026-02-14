@@ -25,7 +25,8 @@ docker-api-demo/
 ├── internal/
 │   ├── config/          # Environment-based configuration
 │   ├── handler/         # HTTP request handlers
-│   ├── middleware/       # HTTP middleware (logging, etc.)
+│   ├── middleware/       # HTTP middleware (logging, Sentry)
+│   ├── monitoring/      # Sentry SDK initialization
 │   └── server/          # HTTP server setup and lifecycle
 ├── Dockerfile           # Multi-stage production build
 ├── docker-compose.yml   # Local development setup
@@ -65,15 +66,19 @@ go test ./...
 
 ## Environment Variables
 
-| Variable   | Default       | Description            |
-|------------|---------------|------------------------|
-| PORT       | 8080          | HTTP listen port       |
-| HOST       | 0.0.0.0       | HTTP listen address    |
-| LOG_LEVEL  | info          | Logging verbosity      |
+| Variable            | Default       | Description                    |
+|---------------------|---------------|--------------------------------|
+| PORT                | 8080          | HTTP listen port               |
+| HOST                | 0.0.0.0       | HTTP listen address            |
+| LOG_LEVEL           | info          | Logging verbosity              |
+| SENTRY_DSN          | (empty)       | Sentry DSN — empty = disabled  |
+| SENTRY_ENVIRONMENT  | development   | Sentry environment tag         |
+| APP_VERSION         | 0.1.0         | Release version sent to Sentry |
 
 ## API Endpoints
 
-| Method | Path       | Description              |
-|--------|------------|--------------------------|
-| GET    | /health    | Health check (readiness)  |
-| GET    | /api/hello | Demo greeting endpoint    |
+| Method | Path              | Description                              |
+|--------|-------------------|------------------------------------------|
+| GET    | /health           | Health check + Sentry status             |
+| GET    | /health?sentry_test=1 | Health check + send Sentry test event |
+| GET    | /api/hello        | Demo greeting endpoint                   |
