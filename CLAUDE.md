@@ -5,6 +5,10 @@
 A demo Go REST API designed to run in a Docker container behind an Nginx reverse proxy.
 Part of a personal infrastructure project for learning Docker containerization and CI/CD.
 
+Infrastructure context lives in the `backend01` repository (Nginx configs, SSL,
+runbooks, deployment scripts). This app is deployed to `api.ruohomaki.fi` via
+Nginx reverse proxy to `127.0.0.1:8080`.
+
 ## Architecture
 
 - **Language:** Go 1.23+
@@ -36,6 +40,8 @@ docker-api-demo/
 - Configuration via environment variables, never hardcoded
 - Dates and times in ISO 8601 / RFC 3339 format
 - Structured log output with timestamps
+- Container ports bind to 127.0.0.1 (Docker bypasses UFW on 0.0.0.0)
+- Use `docker compose` (v2, space not hyphen)
 
 ## Build & Run
 
