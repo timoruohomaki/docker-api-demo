@@ -46,7 +46,11 @@ docker-api-demo/
 │   └── server/
 │       └── server.go        # HTTP server creation and graceful shutdown
 ├── Dockerfile               # Multi-stage: golang:1.23-alpine → alpine:3.21
-├── docker-compose.yml       # Local dev + production (binds 127.0.0.1:8080)
+├── docker-compose.yml       # Local dev (builds locally, binds 127.0.0.1:8080)
+├── docker-compose.prod.yml  # Production (pulls from ghcr.io)
+├── .github/workflows/
+│   ├── ci.yml               # Test + build on push/PR to main
+│   └── cd.yml               # Build image → push to ghcr.io → deploy via SSH
 ├── .dockerignore
 ├── .env                     # Local env vars (not committed)
 ├── go.mod
@@ -112,6 +116,21 @@ go test ./...
 
 Requests pass through: Sentry (panic recovery + tracing) → Request Logger → Handler
 
+## CI/CD Pipeline
+
+**CI** (`.github/workflows/ci.yml`) — runs on every push and PR to `main`:
+- Downloads Go dependencies
+- Runs `go test -v -race ./...`
+- Verifies the binary compiles
+
+**CD** (`.github/workflows/cd.yml`) — runs on push to `main` only:
+- Builds Docker image
+- Pushes to `ghcr.io/timoruohomaki/docker-api-demo` (tagged with commit SHA + `latest`)
+- SSHs into server as `deploy`, pulls the new image, restarts the container
+
+**Required GitHub Secrets:** `SERVER_HOST`, `SERVER_USER`, `SERVER_SSH_KEY`, `SERVER_PORT`
+**Required GitHub Environment:** `production`
+
 ## Related Repositories
 
 - **backend01** — Server infrastructure: Nginx configs, SSL snippets, deployment
@@ -125,5 +144,6 @@ Requests pass through: Sentry (panic recovery + tracing) → Request Logger → 
 - [x] Health endpoint with Sentry status
 - [x] Graceful shutdown
 - [x] Unit tests for handlers
-- [ ] GitHub Actions CI pipeline (Phase 2)
-- [ ] Automated deployment to server (Phase 3)
+- [x] GitHub Actions CI pipeline (tests + build on push/PR)
+- [x] GitHub Actions CD pipeline (image push to ghcr.io + SSH deploy)
+- [ ] Server-side setup: SSH deploy key, GitHub Secrets, production compose

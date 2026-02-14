@@ -1,0 +1,17 @@
+# docker-compose.prod.yml — production compose file for the server
+# Uses pre-built image from ghcr.io instead of building locally
+# Deploy to server at ~/docker-api-demo/docker-compose.yml
+
+services:
+  api:
+    image: ghcr.io/timoruohomaki/docker-api-demo:latest
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      - PORT=8080
+      - HOST=0.0.0.0
+      - LOG_LEVEL=info
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SENTRY_ENVIRONMENT=production
+      - APP_VERSION=${APP_VERSION:-0.1.0}
+    restart: unless-stopped
