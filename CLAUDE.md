@@ -147,3 +147,4 @@ Requests pass through: Sentry (panic recovery + tracing) → Request Logger → 
 - [x] GitHub Actions CI pipeline (tests + build on push/PR)
 - [x] GitHub Actions CD pipeline (image push to ghcr.io + SSH deploy)
 - [x] Server-side setup: SSH deploy key, GitHub Secrets, production compose
+- [x] Full pipeline verified: push → test → build → deploy → live at api.ruohomaki.fi
