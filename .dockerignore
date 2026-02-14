@@ -1,0 +1,9 @@
+.git
+.gitignore
+.env
+README.md
+CLAUDE.md
+LICENSE
+*.exe
+*.test
+*.out
